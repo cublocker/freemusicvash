@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VashMusic - Открой мир музыки</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0a1128;
+            --secondary: #1a237e;
+            --accent: #4a5cd4;
+            --text: #e6e6e6;
+            --text-secondary: #b3b3b3;
+            --player-height: 80px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background-color: var(--primary);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: var(--player-height);
+        }
+        
+        .blur-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            z-index: -2;
+        }
+        
+        .blur-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(100px);
+            z-index: -1;
+            opacity: 0.7;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            position: relative;
+            z-index: 100;
+        }
+        
+        .logo {
+            font-size: clamp(20px, 4vw, 28px);
+            font-weight: 700;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo span {
+            color: var(--accent);
+        }
+        
+        .search-bar {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 8px 15px;
+            width: 40%;
+            min-width: 150px;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+        
+        .search-bar:focus-within {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .search-bar input {
+            background: transparent;
+            border: none;
+            color: white;
+            width: 100%;
+            padding: 5px 10px;
+            outline: none;
+            font-size: clamp(14px, 2vw, 16px);
+        }
+        
+        .search-bar i {
+            color: var(--text-secondary);
+            font-size: clamp(14px, 2vw, 16px);
+        }
+        
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: clamp(10px, 2vw, 25px);
+        }
+        
+        .nav-links a {
+            color: var(--text);
+            text-decoration: none;
+            font-size: clamp(14px, 2vw, 18px);
+            transition: color 0.3s;
+            white-space: nowrap;
+        }
+        
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+        
+        .nav-links i {
+            font-size: clamp(16px, 2vw, 20px);
+        }
+        
+        .menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 80%;
+            max-width: 300px;
+            height: 100vh;
+            background: rgba(10, 17, 40, 0.95);
+            backdrop-filter: blur(15px);
+            z-index: 1000;
+            padding: 20px;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+        }
+        
+        .mobile-menu.active {
+            left: 0;
+        }
+        
+        .mobile-menu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .close-menu {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .mobile-menu-content {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .mobile-menu-section h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+        
+        .mobile-menu-links {
+            list-style: none;
+        }
+        
+        .mobile-menu-links li {
+            margin-bottom: 12px;
+        }
+        
+        .mobile-menu-links a {
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.3s;
+            font-size: 16px;
+            padding: 8px 0;
+        }
+        
+        .mobile-menu-links a:hover {
+            color: var(--accent);
+        }
+        
+        .mobile-menu-links i {
+            width: 20px;
+            text-align: center;
+        }
+        
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        /* Main Content */
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            background: rgba(10, 17, 40, 0.7);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+        
+        .sidebar-title {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: var(--accent);
+        }
+        
+        .sidebar-links {
+            list-style: none;
+        }
+        
+        .sidebar-links li {
+            margin-bottom: 10px;
+        }
+        
+        .sidebar-links a {
+            color: var(--text);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: color 0.3s;
+            font-size: 15px;
+            padding: 6px 0;
+        }
+        
+        .sidebar-links a:hover {
+            color: var(--accent);
+        }
+        
+        .sidebar-links i {
+            width: 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        /* Content */
+        .content {
+            flex-grow: 1;
+        }
+        
+        section {
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            font-size: clamp(18px, 3vw, 24px);
+            margin-bottom: 15px;
+            color: white;
+        }
+        
+        /* Music Grid */
+        .music-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .music-card {
+            background: rgba(26, 35, 126, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .music-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .music-cover {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .music-info {
+            padding: 12px;
+        }
+        
+        .music-title {
+            font-size: 14px;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .music-artist {
+            font-size: 12px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .music-duration {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+        
+        .like-btn {
+            position: absolute;
+            bottom: 50px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .like-btn:hover {
+            background: rgba(255, 0, 0, 0.7);
+        }
+        
+        .like-btn.liked {
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+        }
+        
+        .like-btn i {
+            font-size: 12px;
+        }
+        
+        /* Artist Page */
+        .artist-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 30px;
+            background: rgba(26, 35, 126, 0.3);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        @media (min-width: 768px) {
+            .artist-header {
+                flex-direction: row;
+                text-align: left;
+            }
+        }
+        
+        .artist-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent);
+        }
+        
+        @media (min-width: 768px) {
+            .artist-avatar {
+                width: 150px;
+                height: 150px;
+            }
+        }
+        
+        .artist-info h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        @media (min-width: 768px) {
+            .artist-info h1 {
+                font-size: 36px;
+            }
+        }
+        
+        .artist-bio {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        @media (min-width: 768px) {
+            .artist-bio {
+                font-size: 16px;
+            }
+        }
+        
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Player */
+        .player {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 17, 40, 0.95);
+            backdrop-filter: blur(15px);
+            padding: 10px 0;
+            z-index: 1000;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            height: var(--player-height);
+        }
+        
+        .player-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 15px;
+            height: 100%;
+        }
+        
+        .player-song {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 25%;
+            min-width: 150px;
+            overflow: hidden;
+        }
+        
+        .player-cover {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        
+        .player-song-info {
+            overflow: hidden;
+        }
+        
+        .player-song-info h4 {
+            font-size: 14px;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .player-song-info p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .player-controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 50%;
+            max-width: 500px;
+        }
+        
+        .player-buttons {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 8px;
+        }
+        
+        .player-buttons button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: color 0.3s;
+            padding: 5px;
+        }
+        
+        .player-buttons button:hover {
+            color: var(--accent);
+        }
+        
+        .player-buttons .play-btn {
+            font-size: 24px;
+        }
+        
+        .progress-container {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .progress-bar {
+            flex-grow: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            border-radius: 5px;
+        }
+        
+        .time {
+            font-size: 11px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        
+        .player-extra {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 25%;
+            min-width: 100px;
+            justify-content: flex-end;
+        }
+        
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .volume-bar {
+            width: 60px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .volume-progress {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: var(--accent);
+            width: 100%;
+            border-radius: 5px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 200px 1fr;
+            }
+            
+            .music-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .search-bar {
+                width: 100%;
+                margin: 0 10px;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .menu-btn {
+                display: block;
+            }
+            
+            .player-song {
+                width: 40%;
+            }
+            
+            .player-controls {
+                width: 60%;
+            }
+            
+            .player-extra {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .music-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 10px;
+            }
+            
+            .player-container {
+                flex-direction: column;
+                height: auto;
+                padding: 10px;
+            }
+            
+            .player-song, .player-controls {
+                width: 100%;
+            }
+            
+            .player-song {
+                margin-bottom: 10px;
+            }
+            
+            .player {
+                height: auto;
+                padding: 10px 0;
+            }
+            
+            body {
+                padding-bottom: 120px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .music-grid {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+            
+            .player-buttons {
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="blur-bg"></div>
+    <div class="blur-overlay"></div>
+    
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <div class="logo">Vash<span>Music</span></div>
+            <button class="close-menu" id="closeMenu">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="mobile-menu-content">
+            <div class="mobile-menu-section">
+                <h3>Меню</h3>
+                <ul class="mobile-menu-links">
+                    <li><a href="#"><i class="fas fa-home"></i> Главная</a></li>
+                    <li><a href="#"><i class="fas fa-compass"></i> Исследовать</a></li>
+                    <li><a href="#"><i class="fas fa-heart"></i> Избранное</a></li>
+                    <li><a href="#"><i class="fas fa-history"></i> История</a></li>
+                </ul>
+            </div>
+            
+            <div class="mobile-menu-section">
+                <h3>Артисты</h3>
+                <ul class="mobile-menu-links">
+                    <li><a href="#"><i class="fas fa-user"></i> ПОЛМАТЕРИ</a></li>
+                    <li><a href="#"><i class="fas fa-user"></i> fr1ckx music</a></li>
+                    <li><a href="#"><i class="fas fa-user"></i> JojoHF</a></li>
+                    <li><a href="#"><i class="fas fa-user"></i> New Magick</a></li>
+                    <li><a href="#"><i class="fas fa-user"></i> Armani West</a></li>
+                    <li><a href="#"><i class="fas fa-user"></i> AsteraSounds</a></li>
+                    <li><a href="#"><i class="fas fa-user"></i> Mada</a></li>
+                </ul>
+            </div>
+            
+            <div class="mobile-menu-section">
+                <h3>Плейлисты</h3>
+                <ul class="mobile-menu-links">
+                    <li><a href="#"><i class="fas fa-music"></i> Топ недели</a></li>
+                    <li><a href="#"><i class="fas fa-music"></i> Новинки</a></li>
+                    <li><a href="#"><i class="fas fa-music"></i> Для настроения</a></li>
+                </ul>
+            </div>
+            
+            <div class="mobile-menu-section">
+                <h3>Ссылки</h3>
+                <ul class="mobile-menu-links">
+                    <li><a href="#"><i class="fab fa-telegram"></i> Telegram</a></li>
+                    <li><a href="#"><i class="fab fa-tiktok"></i> TikTok</a></li>
+                    <li><a href="#"><i class="fas fa-envelope"></i> Предложка</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="overlay" id="overlay"></div>
+    
+    <div class="container">
+        <header>
+            <button class="menu-btn" id="openMenu">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <a href="#" class="logo">Vash<span>Music</span></a>
+            
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Поиск треков, артистов...">
+            </div>
+            
+            <div class="nav-links">
+                <a href="https://t.me/vashmusic_official"><i class="fab fa-telegram"></i></a>
+                <a href="https://www.tiktok.com/@vashmusic3?_t=ZP-8yqor8MlaUY&_r=1"><i class="fab fa-tiktok"></i></a>
+                <a href="#">Предложка</a>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">Меню</h3>
+                    <ul class="sidebar-links">
+                        <li><a href="#"><i class="fas fa-home"></i> Главная</a></li>
+                        <li><a href="#"><i class="fas fa-compass"></i> Исследовать</a></li>
+                        <li><a href="#"><i class="fas fa-heart"></i> Избранное</a></li>
+                        <li><a href="#"><i class="fas fa-history"></i> История</a></li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">Артисты</h3>
+                    <ul class="sidebar-links">
+                        <li><a href="#" data-artist="ПОЛМАТЕРИ"><i class="fas fa-user"></i> ПОЛМАТЕРИ</a></li>
+                        <li><a href="#" data-artist="fr1ckx music"><i class="fas fa-user"></i> fr1ckx music</a></li>
+                        <li><a href="#" data-artist="JojoHF"><i class="fas fa-user"></i> JojoHF</a></li>
+                        <li><a href="#" data-artist="New Magick"><i class="fas fa-user"></i> New Magick</a></li>
+                        <li><a href="#" data-artist="Armani West"><i class="fas fa-user"></i> Armani West</a></li>
+                        <li><a href="#" data-artist="AsteraSounds"><i class="fas fa-user"></i> AsteraSounds</a></li>
+                        <li><a href="#" data-artist="Mada"><i class="fas fa-user"></i> Mada</a></li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3 class="sidebar-title">Плейлисты</h3>
+                    <ul class="sidebar-links">
+                        <li><a href="#"><i class="fas fa-music"></i> Топ недели</a></li>
+                        <li><a href="#"><i class="fas fa-music"></i> Новинки</a></li>
+                        <li><a href="#"><i class="fas fa-music"></i> Для настроения</a></li>
+                    </ul>
+                </div>
+            </aside>
+            
+            <main class="content">
+                <button class="back-btn" id="backBtn" style="display: none;">
+                    <i class="fas fa-arrow-left"></i> Назад
+                </button>
+                
+                <section class="featured" id="featuredSection">
+                    <h2>Популярные треки</h2>
+                    <div class="music-grid" id="music-grid">
+                        <!-- Треки будут загружены через JS -->
+                    </div>
+                </section>
+                
+                <section class="new-releases">
+                    <h2>Лучшие треки</h2>
+                    <div class="music-grid" id="new-releases-grid">
+                        <!-- Треки будут загружены через JS -->
+                    </div>
+                </section>
+                
+                <!-- Страница артиста -->
+                <div id="artist-page" style="display: none;">
+                    <div class="artist-header">
+                        <img src="https://i.postimg.cc/1z1P1ff7/i-3.jpg" alt="ПОЛМАТЕРИ" class="artist-avatar" id="artistAvatar">
+                        <div class="artist-info">
+                            <h1 id="artistName">ПОЛМАТЕРИ</h1>
+                            <p class="artist-bio" id="artistBio">
+                                «Полматери» — литовская музыкальная группа из города Алитус. Исполняет музыку в стиле постпанка, инди-рока, пост-хардкора. Тексты песен коллектива изобилуют ненормативной лексикой и социально-политическим стебом. 
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <h2>Треки</h2>
+                    <div class="music-grid" id="artist-tracks">
+                        <!-- Треки артиста будут загружены через JS -->
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <div class="player">
+        <div class="player-container">
+            <div class="player-song">
+                <img src="https://i.postimg.cc/1z1P1ff7/i-3.jpg" alt="Cover" class="player-cover" id="playerCover">
+                <div class="player-song-info">
+                    <h4 id="playerTitle">Псы попадут в рай</h4>
+                    <p id="playerArtist">ПОЛМАТЕРИ</p>
+                </div>
+            </div>
+            
+            <div class="player-controls">
+                <div class="player-buttons">
+                    <button id="shuffleBtn"><i class="fas fa-random"></i></button>
+                    <button id="prevBtn"><i class="fas fa-step-backward"></i></button>
+                    <button id="playBtn"><i class="fas fa-play play-btn"></i></button>
+                    <button id="nextBtn"><i class="fas fa-step-forward"></i></button>
+                    <button id="repeatBtn"><i class="fas fa-redo"></i></button>
+                </div>
+                
+                <div class="progress-container">
+                    <span class="time" id="currentTime">0:00</span>
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress" id="progress"></div>
+                    </div>
+                    <span class="time" id="duration">2:37</span>
+                </div>
+            </div>
+            
+            <div class="player-extra">
+                <div class="volume-container">
+                    <button id="volumeBtn"><i class="fas fa-volume-up"></i></button>
+                    <div class="volume-bar" id="volumeBar">
+                        <div class="volume-progress" id="volumeProgress"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Данные о треках
+        const songs = [
+            {
+                id: 1,
+                title: "Псы попадут в рай",
+                artist: "ПОЛМАТЕРИ",
+                cover: "https://i.postimg.cc/1z1P1ff7/i-3.jpg",
+                file: "music/ПОЛМАТЕРИ-Псы попадут в рай.m4a",
+                duration: "2:37",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 2,
+                title: "Слезы На Морозе (remix)",
+                artist: "fr1ckx music",
+                cover: "https://i.postimg.cc/t4XzTHYq/267-20250813142419.png",
+                file: "music/fr1ckx music Слезы На Морозе (remix).m4a",
+                duration: "2:51",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 3,
+                title: "МАМА Я ВЛЮБИЛСЯ В НЕЁ (remix) (TikTok)",
+                artist: "JojoHF",
+                cover: "https://i.postimg.cc/JhddbFjw/i-4.jpg",
+                file: "music/МАМА Я ВЛЮБИЛСЯ В НЕЁ (remix) (TikTok).mp3",
+                duration: "2:26",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 4,
+                title: "Gold",
+                artist: "New Magick",
+                cover: "https://i.postimg.cc/Qts76Q1X/Picsart-25-08-13-14-37-07-233.jpg",
+                file: "music/Gold - New Magick.mp3",
+                duration: "1:32",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 5,
+                title: "Piano Tiles 2",
+                artist: "Armani West",
+                cover: "https://i.postimg.cc/7Y0rMSHs/1000238365.webp",
+                file: "music/Armani_West_Piano_Tiles_2_with_6arelyhuman_Cortisa_Star_O.mp3",
+                duration: "3:03",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 6,
+                title: "Рассвет (nightcore version)",
+                artist: "AsteraSounds",
+                cover: "https://i.postimg.cc/j2tn8J3Y/1275x1275bb-60.webp",
+                file: "music/Рассвет (Nightcore Version) - AsteraSounds.mp3",
+                duration: "3:05",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 7,
+                title: "Самая",
+                artist: "Mada",
+                cover: "https://i.postimg.cc/QMMRL6Pf/9517056cb821886556fb5fc4edbefde9.jpg",
+                file: "music/Mada - Самая (Official music) - Mada.mp3",
+                duration: "2:25",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 8,
+                title: "CADILLAC",
+                artist: "MORGENSHTERN*",
+                cover: "https://i.postimg.cc/QxFStfF0/image.png",
+                file: "music/MORGENSHTERNfeat_JEldzhi_-_KADILLAK_69853991 (1).mp3",
+                duration: "2:58",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 9,
+                title: "Новый Мерин",
+                artist: "MORGENSHTERN*",
+                cover: "https://i.postimg.cc/d0jjXXft/image.png",
+                file: "music/MORGENSHTERN_-_Novyjj_Merin_66404393.mp3",
+                duration: "2:32",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 10,
+                title: "Грустная Песня",
+                artist: "Егор Крид, THRILL PILL, MORGENSHTERN**",
+                cover: "https://i.postimg.cc/J0vNZWsK/image.png",
+                file: "music/THRILL_PILL_Egor_Krid_MORGENSHTERN_-_Grustnaya_Pesnya_67147398.mp3",
+                duration: "3:46",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 11,
+                title: "Cristal & МОЁТ",
+                artist: "MORGENSHTERN**",
+                cover: "https://i.postimg.cc/qvfc74Vv/image.png",
+                file: "music/MORGENSHTERN_-_Cristal_MOJOT_72141222.mp3",
+                duration: "2:17",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 12,
+                title: "Будильник",
+                artist: "Егор крид",
+                cover: "https://i.postimg.cc/pLDfh4RY/image.png",
+                file: "music/Egor_Krid_-_Budilnik_31096222.mp3",
+                duration: "3:24",
+                isLiked: false,
+                isNew: false
+            },
+           {
+                id: 13,
+                title: "Мне нравится",
+                artist: "Егор крид",
+                cover: "https://i.postimg.cc/s2m5KWBM/image.png",
+                file: "music/Egor_Krid_-_Mne_nravitsya_48846775.mp3",
+                duration: "3:16",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 14,
+                title: "Цвет Настроения Чёрный [feat. Филипп Киркоров]",
+                artist: "Егор крид",
+                cover: "https://i.postimg.cc/3NsGWCqc/image.png",
+                file: "music/Egor_KridTimati_illip_Kilkorov_-_Cvet_nastroeniya_chjornyjj_62611859.mp3",
+                duration: "3:09",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 15,
+                title: "PUSSY BOY",
+                artist: "Егор крид",
+                cover: "https://i.postimg.cc/dtCdppkP/image.png",
+                file: "music/Egor_Krid_-_PUSSY_BOY_73755941.mp3",
+                duration: "2:14",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 16,
+                title: "Моя Игра",
+                artist: "Баста",
+                cover: "https://i.postimg.cc/rmbQTH16/image.png",
+                file: "music/BASTA_-_Moya_igra_48232195.mp3",
+                duration: "4:28",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 17,
+                title: "Сансара",
+                artist: "Баста",
+                cover: "https://i.postimg.cc/MK1dkdX4/image.png",
+                file: "music/BASTA_-_Sansara_47921115.mp3",
+                duration: "6:02",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 18,
+                title: "Выпускной",
+                artist: "Баста",
+                cover: "https://i.postimg.cc/SKxrM4VF/image.png",
+                file: "music/BASTA_-_Vypusknojj_Medlyachok_48206841.mp3",
+                duration: "5:35",
+                isLiked: false,
+                isNew: true
+            },
+            {
+                id: 19,
+                title: "На заре",
+                artist: "Баста",
+                cover: "https://i.postimg.cc/yxcXH869/image.png",
+                file: "music/Basta_-_Na_zare_75113115.mp3",
+                duration: "5:06",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 20,
+                title: "На Чиле (feat. Егор Крид, The Limba, blago white, OG Buda, Тимати, SODA LUV, Гуф)",
+                artist: "Джиган",
+                cover: "https://i.postimg.cc/pL2Qwvwh/image.png",
+                file: "music/Dzhigan_Egor_Krid_The_Limba_blago_white_SODA_LUV_-_Na_chile_73465123.mp3",
+                duration: "3:17",
+                isLiked: false,
+                isNew: true
+            },
+            {
+                id: 21,
+                title: "Наследство",
+                artist: "ICEGERGERT",
+                cover: "https://i.postimg.cc/tgchnxYW/image.png",
+                file: "music/ICEGERGERT, SKY RAE — Наследство (www.lightaudio.ru).mp3",
+                duration: "2:10",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 22,
+                title: "Есенин",
+                artist: "Navai",
+                cover: "https://i.postimg.cc/nz7Qsw8f/image.png",
+                file: "music/Navai_Mona_-_Esenin_77552354.mp3",
+                duration: "2:50",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 23,
+                title: "Turbo (Majestic)",
+                artist: "Big Baby Tape",
+                cover: "https://i.postimg.cc/6qf2c25H/image.png",
+                file: "music/Big_Baby_Tape_-_Turbo_Majestic_78196434.mp3",
+                duration: "2:55",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 24,
+                title: "Счастливым",
+                artist: "NILETTO",
+                cover: "https://i.postimg.cc/PqvCcF5v/image.png",
+                file: "music/Niletto_-_Schastlivym_78229797.mp3",
+                duration: "2:50",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 25,
+                title: "Любимка",
+                artist: "NILETTO",
+                cover: "https://i.postimg.cc/Yq2hkSSH/image.png",
+                file: "music/Niletto_-_Vremya_postrelyat_mezhdu_nami_palba_67575586.mp3",
+                duration: "3:39",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 26,
+                title: "Ты отвезёшь",
+                artist: "Света",
+                cover: "https://i.postimg.cc/k4FgPr3G/image.png",
+                file: "music/Sveta_-_Ty_otvezesh_menya_domojji_gorod_tikho_rastvoritsya_v_sumerkakh_moejj_ne_mojjeshhe_ne_mojjsovsem_nemnogo_i_ya_zaplachu_72239936.mp3",
+                duration: "3:41",
+                isLiked: false,
+                isNew: true
+            },
+            {
+                id: 27,
+                title: "Силиконовый Гном",
+                artist: "Мейби Бейби",
+                cover: "https://i.postimg.cc/8kZTRmT2/image.png",
+                file: "music/MJEJJBI_BJEJJBI_-_Silikonovyjj_Gnom_79328562.mp3",
+                duration: "3:32",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 28,
+                title: "Аскорбинка",
+                artist: "Мейби Бейби",
+                cover: "https://i.postimg.cc/gjjFS1Gf/image.png",
+                file: "music/MJEJJBI_BJEJJBI_-_Askorbinka_57676458.mp3",
+                duration: "2:09",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 29,
+                title: "Кардиограмма",
+                artist: "Мейби Бейби",
+                cover: "https://i.postimg.cc/v82dg8zM/image.png",
+                file: "music/Mjejjbi_Bjejjbi_-_Kardiogramma_79417095.mp3",
+                duration: "2:51",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 30,
+                title: "Oh my God!",
+                artist: "Мейби Бейби",
+                cover: "https://postimg.cc/87ZXLPfs",
+                file: "music/Mjejjbi_Bjejjbi_-_Oh_My_God_79361484.mp3",
+                duration: "2:01",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 31,
+                title: "Hit Em Up",
+                artist: "Мейби Бейби",
+                cover: "https://i.postimg.cc/MHN4sTPQ/image.png",
+                file: "music/MJEJJBI_BJEJJBI_-_Hit_Em_Up_78393085.mp3",
+                duration: "2:39",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 32,
+                title: "Дорадура",
+                artist: "Дора",
+                cover: "https://i.postimg.cc/Z5k2pWyk/image.png ",
+                file: "music/Dora_-_Doradura_67131505.mp3",
+                duration: "2:14",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 33,
+                title: "Младшая Сестра",
+                artist: "Дора",
+                cover: "https://i.postimg.cc/3w1cs9f7/image.png ",
+                file: "music/dora_-_Mladshaya_sestra_67358807.mp3",
+                duration: "3:42",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 34,
+                title: "Сан Ларан (feat. Платина)",
+                artist: "Дора",
+                cover: "https://i.postimg.cc/3w1cs9f7/image.png ",
+                file: "music/Platina_dora_-_San_Laran_73389989.mp3",
+                duration: "3:25",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 35,
+                title: "ЁК",
+                artist: "Дора",
+                cover: "https://i.postimg.cc/CKvVGFgj/image.png ",
+                file: "music/Дора - ЁК.mp3",
+                duration: "2:39",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 36,
+                title: "Баклажан",
+                artist: "Тимати",
+                cover: "https://i.postimg.cc/Df4KGkYX/image.png ",
+                file: "music/Timati_-_Baklazhan_48035696.mp3",
+                duration: "3:06",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 37,
+                title: "В клубе",
+                artist: "Тимати",
+                cover: "https://i.postimg.cc/Nf1qN8tG/image.png ",
+                file: "music/Timati_-_V_Klube_48266963.mp3",
+                duration: "4:27",
+                isLiked: false,
+                isNew: false
+            },
+            {
+                id: 38,
+                title: "HALLOWEEN",
+                artist: "BUSHIDO ZHO",
+                cover: "https://i.postimg.cc/7YrjTC2F/image.png",
+                file: "music/BUSHIDO_ZHO_-_HALLOWEEN_74960292.mp3",
+                duration: "2:00",
+                isLiked: false,
+                isNew: false
+            },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+        ];
+        
+        // Данные об артистах
+        const artists = {
+            "ПОЛМАТЕРИ": {
+                avatar: "https://i.postimg.cc/1z1P1ff7/i-3.jpg",
+                bio: "«Полматери» — литовская музыкальная группа из города Алитус. Исполняет музыку в стиле постпанка, инди-рока, пост-хардкора. Тексты песен коллектива изобилуют ненормативной лексикой и социально-политическим стебом. ",
+                tracks: [1]
+            },
+            "fr1ckx music": {
+                avatar: "https://i.postimg.cc/t4XzTHYq/267-20250813142419.png",
+                bio: "Молодой и перспективный артист, создающий ремиксы на популярные треки с собственным уникальным звучанием.",
+                tracks: [2]
+            },
+            "JojoHF": {
+                avatar: "https://i.postimg.cc/JhddbFjw/i-4.jpg",
+                bio: "Артист, специализирующийся на создании вирусных ремиксов для TikTok с запоминающимися мелодиями.",
+                tracks: [3]
+            },
+            "New Magick": {
+                avatar: "https://i.postimg.cc/Qts76Q1X/Picsart-25-08-13-14-37-07-233.jpg",
+                bio: "Экспериментальный проект, сочетающий элементы электронной музыки и хип-хопа.",
+                tracks: [4]
+            },
+            "Armani West": {
+                avatar: "https://i.postimg.cc/7Y0rMSHs/1000238365.webp",
+                bio: "Талантливый продюсер и музыкант, известный своими коллаборациями с другими артистами.",
+                tracks: [5]
+            },
+            "AsteraSounds": {
+                avatar: "https://i.postimg.cc/j2tn8J3Y/1275x1275bb-60.webp",
+                bio: "Создатель nightcore-версий популярных треков, придающий им новое звучание.",
+                tracks: [6]
+            },
+            "Mada": {
+                avatar: "https://i.postimg.cc/QMMRL6Pf/9517056cb821886556fb5fc4edbefde9.jpg",
+                bio: "Mada — исполнитель музыки. Среди его работ — альбомы «Запрещённая романтика» (2023), «Давай будем счастливы» (2024), «7 Смертных грехов» (2024). ",
+                tracks: [7]
+            }
+        };
+        
+        // DOM элементы
+        const musicGrid = document.getElementById('music-grid');
+        const newReleasesGrid = document.getElementById('new-releases-grid');
+        const artistPage = document.getElementById('artist-page');
+        const featuredSection = document.getElementById('featuredSection');
+        const artistTracks = document.getElementById('artist-tracks');
+        const backBtn = document.getElementById('backBtn');
+        
+        // Элементы плеера
+        const playerCover = document.getElementById('playerCover');
+        const playerTitle = document.getElementById('playerTitle');
+        const playerArtist = document.getElementById('playerArtist');
+        const playBtn = document.getElementById('playBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progress = document.getElementById('progress');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const volumeBar = document.getElementById('volumeBar');
+        const volumeProgress = document.getElementById('volumeProgress');
+        const volumeBtn = document.getElementById('volumeBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const shuffleBtn = document.getElementById('shuffleBtn');
+        const repeatBtn = document.getElementById('repeatBtn');
+        
+        // Мобильное меню
+        const mobileMenu = document.getElementById('mobileMenu');
+        const openMenuBtn = document.getElementById('openMenu');
+        const closeMenuBtn = document.getElementById('closeMenu');
+        const overlay = document.getElementById('overlay');
+        
+        // Аудио элемент
+        const audio = new Audio();
+        let currentSong = 0;
+        let isPlaying = false;
+        let isShuffle = false;
+        let isRepeat = false;
+        let isMuted = false;
+        let volume = 0.7;
+        
+        // Загрузка треков на страницу
+        function loadSongs() {
+            musicGrid.innerHTML = '';
+            newReleasesGrid.innerHTML = '';
+            
+            songs.forEach((song, index) => {
+                const songEl = createSongElement(song, index);
+                
+                if (song.isNew) {
+                    newReleasesGrid.appendChild(songEl.cloneNode(true));
+                } else {
+                    musicGrid.appendChild(songEl);
+                }
+            });
+        }
+        
+        // Создание элемента трека
+        function createSongElement(song, index) {
+            const songEl = document.createElement('div');
+            songEl.classList.add('music-card');
+            songEl.innerHTML = `
+                <img src="${song.cover}" alt="${song.title}" class="music-cover">
+                <span class="music-duration">${song.duration}</span>
+                <button class="like-btn ${song.isLiked ? 'liked' : ''}" data-id="${song.id}">
+                    <i class="fas fa-heart"></i>
+                </button>
+                <div class="music-info">
+                    <h3 class="music-title">${song.title}</h3>
+                    <p class="music-artist">${song.artist}</p>
+                </div>
+            `;
+            songEl.addEventListener('click', () => playSong(index));
+            return songEl;
+        }
+        
+        // Загрузка треков артиста
+        function loadArtistTracks(artistName) {
+            const artist = artists[artistName];
+            if (!artist) return;
+            
+            // Обновляем информацию об артисте
+            document.getElementById('artistAvatar').src = artist.avatar;
+            document.getElementById('artistName').textContent = artistName;
+            document.getElementById('artistBio').textContent = artist.bio;
+            
+            // Загружаем треки
+            artistTracks.innerHTML = '';
+            artist.tracks.forEach(trackId => {
+                const songIndex = songs.findIndex(s => s.id === trackId);
+                if (songIndex !== -1) {
+                    const song = songs[songIndex];
+                    const songEl = createSongElement(song, songIndex);
+                    artistTracks.appendChild(songEl);
+                }
+            });
+            
+            // Показываем страницу артиста
+            featuredSection.style.display = 'none';
+            document.querySelector('.new-releases').style.display = 'none';
+            artistPage.style.display = 'block';
+            backBtn.style.display = 'inline-flex';
+        }
+        
+        // Воспроизведение трека
+        function playSong(index) {
+            currentSong = index;
+            const song = songs[index];
+            
+            audio.src = song.file;
+            audio.volume = volume;
+            audio.play();
+            
+            playerCover.src = song.cover;
+            playerTitle.textContent = song.title;
+            playerArtist.textContent = song.artist;
+            playBtn.innerHTML = '<i class="fas fa-pause play-btn"></i>';
+            isPlaying = true;
+            
+            // Обновляем время длительности
+            durationEl.textContent = song.duration;
+        }
+        
+        // Переключение состояния воспроизведения
+        function togglePlay() {
+            if (isPlaying) {
+                audio.pause();
+                playBtn.innerHTML = '<i class="fas fa-play play-btn"></i>';
+            } else {
+                audio.play();
+                playBtn.innerHTML = '<i class="fas fa-pause play-btn"></i>';
+            }
+            isPlaying = !isPlaying;
+        }
+        
+        // Обновление прогресс-бара
+        function updateProgress(e) {
+            const { duration, currentTime } = e.srcElement;
+            const progressPercent = (currentTime / duration) * 100;
+            progress.style.width = `${progressPercent}%`;
+            
+            // Обновление времени
+            const currentMinutes = Math.floor(currentTime / 60);
+            let currentSeconds = Math.floor(currentTime % 60);
+            if (currentSeconds < 10) {
+                currentSeconds = `0${currentSeconds}`;
+            }
+            currentTimeEl.textContent = `${currentMinutes}:${currentSeconds}`;
+        }
+        
+        // Установка прогресса при клике
+        function setProgress(e) {
+            const width = this.clientWidth;
+            const clickX = e.offsetX;
+            const duration = audio.duration;
+            audio.currentTime = (clickX / width) * duration;
+        }
+        
+        // Установка громкости
+        function setVolume(e) {
+            const width = this.clientWidth;
+            const clickX = e.offsetX;
+            volume = clickX / width;
+            audio.volume = volume;
+            volumeProgress.style.width = `${volume * 100}%`;
+            
+            // Обновление иконки
+            if (volume === 0) {
+                volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                isMuted = true;
+            } else {
+                volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                isMuted = false;
+            }
+        }
+        
+        // Переключение режима "Тихо"
+        function toggleMute() {
+            if (isMuted) {
+                audio.volume = volume;
+                volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                isMuted = false;
+            } else {
+                audio.volume = 0;
+                volumeBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                isMuted = true;
+            }
+        }
+        
+        // Следующий трек
+        function nextSong() {
+            if (isShuffle) {
+                currentSong = Math.floor(Math.random() * songs.length);
+            } else {
+                currentSong++;
+                if (currentSong > songs.length - 1) {
+                    currentSong = 0;
+                }
+            }
+            playSong(currentSong);
+        }
+        
+        // Предыдущий трек
+        function prevSong() {
+            if (audio.currentTime > 3) {
+                audio.currentTime = 0;
+            } else {
+                currentSong--;
+                if (currentSong < 0) {
+                    currentSong = songs.length - 1;
+                }
+                playSong(currentSong);
+            }
+        }
+        
+        // Переключение режима повтора
+        function toggleRepeat() {
+            isRepeat = !isRepeat;
+            audio.loop = isRepeat;
+            repeatBtn.style.color = isRepeat ? 'var(--accent)' : 'white';
+        }
+        
+        // Переключение режима перемешивания
+        function toggleShuffle() {
+            isShuffle = !isShuffle;
+            shuffleBtn.style.color = isShuffle ? 'var(--accent)' : 'white';
+        }
+        
+        // Возврат на главную
+        function backToHome() {
+            featuredSection.style.display = 'block';
+            document.querySelector('.new-releases').style.display = 'block';
+            artistPage.style.display = 'none';
+            backBtn.style.display = 'none';
+        }
+        
+        // Открытие мобильного меню
+        function openMobileMenu() {
+            mobileMenu.classList.add('active');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        // Закрытие мобильного меню
+        function closeMobileMenu() {
+            mobileMenu.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Инициализация
+        function init() {
+            loadSongs();
+            
+            // Обработчики для плеера
+            playBtn.addEventListener('click', togglePlay);
+            audio.addEventListener('timeupdate', updateProgress);
+            audio.addEventListener('ended', () => {
+                if (!isRepeat) nextSong();
+            });
+            progressBar.addEventListener('click', setProgress);
+            volumeBar.addEventListener('click', setVolume);
+            volumeBtn.addEventListener('click', toggleMute);
+            nextBtn.addEventListener('click', nextSong);
+            prevBtn.addEventListener('click', prevSong);
+            shuffleBtn.addEventListener('click', toggleShuffle);
+            repeatBtn.addEventListener('click', toggleRepeat);
+            
+            // Обработчики для навигации
+            backBtn.addEventListener('click', backToHome);
+            
+            // Обработчики для артистов в сайдбаре
+            document.querySelectorAll('.sidebar-links a[data-artist]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const artistName = link.dataset.artist;
+                    loadArtistTracks(artistName);
+                });
+            });
+            
+            // Обработчики для мобильного меню
+            openMenuBtn.addEventListener('click', openMobileMenu);
+            closeMenuBtn.addEventListener('click', closeMobileMenu);
+            overlay.addEventListener('click', closeMobileMenu);
+            
+            // Обработчики для артистов в мобильном меню
+            document.querySelectorAll('.mobile-menu-links a').forEach(link => {
+                if (link.querySelector('.fa-user')) {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const artistName = link.textContent.trim();
+                        loadArtistTracks(artistName);
+                        closeMobileMenu();
+                    });
+                }
+            });
+            
+            // Установка начальной громкости
+            audio.volume = volume;
+            volumeProgress.style.width = `${volume * 100}%`;
+        }
+        
+        // Запуск приложения
+        init();
+    </script>
+</body>
+</html>
